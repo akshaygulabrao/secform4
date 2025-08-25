@@ -104,7 +104,7 @@ for _, row in df.iterrows():
     # _ingest_and_clean(root, ticker, "8-K")
 
     # --- Form 4 ----------------------------------------------------
-    dl.get("4", ticker, limit=10, after="2025-08-10")
+    dl.get("4", ticker, limit=10, after="2025-08-15")
     _ingest_and_clean(root, ticker, "4")
 
 # ------------------------------------------------------------------

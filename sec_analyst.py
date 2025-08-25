@@ -1,6 +1,7 @@
 #!.venv/bin/python
 
 import sqlite3, re, llm, json, os, sys
+from testbench_form4_dedup import strip_redundancy
 from typing import List, Tuple
 
 ###############################################################################
@@ -79,7 +80,7 @@ def main() -> None:
             if cur.execute("SELECT 1 FROM form4_sentiment WHERE accession = ?", (accession,)).fetchone():
                 continue
 
-            sentiment = classify(text)
+            sentiment = classify(strip_redundancy(text))
             cur.execute("INSERT INTO form4_sentiment(ticker, accession, sentiment) VALUES (?,?,?)",
                         (ticker, accession, sentiment))
             conn.commit()
