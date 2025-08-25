@@ -10,7 +10,7 @@ import re
 # 1.  CONFIGURATION
 # ------------------------------------------------------------------
 DB_PATH = Path("filings.db")          # where the SQLite DB lives
-CSV_PATH = Path("companies.csv")      # your input file
+CSV_PATH = Path("target_stocks.csv")      # your input file
 
 # ------------------------------------------------------------------
 # 2.  PREPARE DATABASE
@@ -63,7 +63,7 @@ def _ingest_and_clean(root: Path, ticker: str, form_type: str) -> None:
 
             conn.execute(
                 """
-                INSERT OR IGNORE INTO filings
+                INSERT INTO filings
                 (ticker, form_type, accession, text, acceptance_datetime)
                 VALUES (?, ?, ?, ?, ?)
                 """,
@@ -89,7 +89,7 @@ def _ingest_and_clean(root: Path, ticker: str, form_type: str) -> None:
 # ------------------------------------------------------------------
 for _, row in df.iterrows():
     ticker = row['ticker']
-    print(row['title'])
+    print(row['ticker'])
 
     # --- 10-K ------------------------------------------------------
     # dl.get("10-K", ticker, limit=1)
@@ -104,8 +104,14 @@ for _, row in df.iterrows():
     # _ingest_and_clean(root, ticker, "8-K")
 
     # --- Form 4 ----------------------------------------------------
-    dl.get("4", ticker, limit=10, after="2025-08-15")
-    _ingest_and_clean(root, ticker, "4")
+    try:
+        dl.get("4", ticker, limit=10, after="2025-08-15")
+        _ingest_and_clean(root, ticker, "4")
+    except ValueError:
+        print(f"Could not fetch ticker {ticker}")
+    except:
+        print(f"Error with {ticker}")
+        raise
 
 # ------------------------------------------------------------------
 # 7.  SANITY CHECK
