@@ -63,7 +63,7 @@ def page_through_screen(query,
 query_name = EquityQuery('and', [
        EquityQuery('eq', ['region', 'us']),
        EquityQuery('lt', ['intradaymarketcap', 20000000000]),
-       EquityQuery('gt', ['intradaymarketcap', 1000000]),
+       EquityQuery('gt', ['intradaymarketcap', 1000000000]),
 
        EquityQuery('or',[
                    EquityQuery('eq', ['sector','Healthcare']),

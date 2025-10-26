@@ -5,12 +5,13 @@ from sec_edgar_downloader import Downloader
 import pandas as pd
 from pathlib import Path
 import re
+from tqdm import tqdm
 
 # ------------------------------------------------------------------
 # 1.  CONFIGURATION
 # ------------------------------------------------------------------
 DB_PATH = Path("filings.db")          # where the SQLite DB lives
-CSV_PATH = Path("target_stocks.csv")      # your input file
+CSV_PATH = Path("companies.csv")      # your input file
 
 # ------------------------------------------------------------------
 # 2.  PREPARE DATABASE
@@ -45,7 +46,7 @@ ad_re = re.compile(r"<ACCEPTANCE-DATETIME>(\d{14})", re.I)
 # 5.  INGEST / CLEAN HELPER
 # ------------------------------------------------------------------
 def _ingest_and_clean(root: Path, ticker: str, form_type: str) -> None:
-    if type(ticker) != 'str': return
+    if not isinstance(ticker,str): return
     ticker_dir = root / ticker.upper()
     form_dir   = ticker_dir / form_type.upper()
 
@@ -60,10 +61,9 @@ def _ingest_and_clean(root: Path, ticker: str, form_type: str) -> None:
             text = txt_file.read_text(encoding="utf-8", errors="ignore")
             m = ad_re.search(text[:1000])
             acceptance_dt = m.group(1) if m else None
-
             conn.execute(
                 """
-                INSERT INTO filings
+                INSERT OR IGNORE INTO filings
                 (ticker, form_type, accession, text, acceptance_datetime)
                 VALUES (?, ?, ?, ?, ?)
                 """,
@@ -87,25 +87,12 @@ def _ingest_and_clean(root: Path, ticker: str, form_type: str) -> None:
 # ------------------------------------------------------------------
 # 6.  MAIN LOOP
 # ------------------------------------------------------------------
-for _, row in df.iterrows():
+for _, row in tqdm(df.iterrows(), total=len(df), desc="tickers"):
     ticker = row['ticker']
-    print(row['ticker'])
+    tqdm.write(ticker)          # prints on its own line (no bar corruption)
 
-    # --- 10-K ------------------------------------------------------
-    # dl.get("10-K", ticker, limit=1)
-    # _ingest_and_clean(root, ticker, "10-K")
-
-    # --- 10-Q ------------------------------------------------------
-    # dl.get("10-Q", ticker, limit=5)
-    # _ingest_and_clean(root, ticker, "10-Q")
-
-    # --- 8-K -------------------------------------------------------
-    # dl.get("8-K", ticker, limit=5)
-    # _ingest_and_clean(root, ticker, "8-K")
-
-    # --- Form 4 ----------------------------------------------------
     try:
-        dl.get("4", ticker, limit=10, after="2025-08-15")
+        dl.get("4", ticker, after="2025-07-20")
         _ingest_and_clean(root, ticker, "4")
     except ValueError:
         print(f"Could not fetch ticker {ticker}")

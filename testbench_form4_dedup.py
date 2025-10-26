@@ -8,9 +8,6 @@ import sqlite3
 import re
 from typing import Tuple
 
-###############################################################################
-# 1.  Grab one filing from the DB
-###############################################################################
 def fetch_one_form4() -> Tuple[str, str, str]:
     """Return (ticker, accession, raw_text) for one Form 4."""
     with sqlite3.connect("filings.db") as conn:
@@ -26,9 +23,6 @@ def fetch_one_form4() -> Tuple[str, str, str]:
             raise RuntimeError("No Form 4 found in filings table")
         return row["ticker"], row["accession"], row["text"]
 
-###############################################################################
-# 2.  Very small de-duplication / boiler-plate stripper
-###############################################################################
 import xml.etree.ElementTree as ET
 
 def print_xml_as_filesystem(xml_string):
@@ -73,15 +67,12 @@ def strip_redundancy(text: str) -> str:
     root = ET.fromstring(match.group(1).strip())
     return print_element_paths(root)
 
-###############################################################################
-# 3.  Quick visual test
-###############################################################################
 if __name__ == "__main__":
     ticker, accession, raw = fetch_one_form4()
     print("=" * 80)
     print(f"RAW   ({ticker} / {accession})")
     print("=" * 80)
-    print(raw)          # first 2k chars so the console doesn’t explode
+    print(raw)
     print("\n" + "=" * 80)
     print("CLEANED")
     print("=" * 80)
